@@ -1,0 +1,49 @@
+<!--
+IMPORTANT:
+Any resources from this project should be referenced using SRC_PATH preprocessor var.
+See examples below in the boilerplate code
+-->
+
+<!-- cot-app:head -->
+  <!--@exec startBuildTagWithCacheBuster('styles/main.css')-->
+    <!-- core:css -->
+    <!-- endinject -->
+    <!-- place your application stylesheet references here: -->
+    <!--@if ENV=='local'--><link rel="stylesheet" type="text/css" href="../node_modules/cotui/dist/cotui/cotui.css"><!--@endif-->
+
+    <link rel="stylesheet" type="text/css" href="<!-- @echo SRC_PATH -->/styles/main.css">
+  <!-- endbuild -->
+  <!--@exec startBuildTagWithCacheBuster('styles/core_print.css', 'media="print"')-->
+    <!-- core_print:css -->
+    <!-- endinject -->
+    <!-- place any application print-only stylesheet references here -->
+  <!-- endbuild -->
+<!-- cot-app:head end-->
+
+<!-- cot-app:body -->
+<div id="fepe_pothole_container">
+  <h2>Total Potholes Filled By Year</h2>
+  <div id="filled-counts" class="row"></div>
+  <h2>Potholes filled for the period of January 1 - July 21</h2>
+  <div class="row">
+    <div id="filter-button" class="col-xs-12"></div>
+    <cotui-chart id="pothole-bar" class="col-xs-12" chart-type="bar" chart-stacked="false" chart-title="Year To Date Potholes Filled" x-axisLabel="Fill Date" y-axisLabel="Total Fills" style="height: 600px;"></cotui-chart>
+  </div>
+</div>
+<!-- cot-app:body end-->
+
+<!-- cot-app:footer -->
+  <!--@exec startBuildTagWithCacheBuster('scripts/main.js')-->
+    <!-- core:js -->
+    <!-- endinject -->
+    <!-- place your application script references here: -->
+    <script type="text/javascript" src="<!-- @echo SRC_PATH -->/scripts/main.js"></script>
+  <!-- endbuild -->
+  <!--@if ENV!='prod'-->
+  <script type="text/javascript">
+    console.log('fepe_pothole running on <!--@echo ENV--> environment');
+    console.log('fepe_pothole qa release: <!--@echo QA_RELEASE-->');
+    console.log('fepe_pothole build: <!--@echo BUILD_ID-->');
+  </script>
+  <!--@endif-->
+<!-- cot-app:footer end-->
