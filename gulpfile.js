@@ -8,9 +8,15 @@ core.embeddedApp.createTasks(gulp, {
   environmentOverride: null,
   deploymentPath: '',
   preprocessorContext: {
-    local: {},
-    dev: {},
-    qa: {},
+    local: {
+      DATA: `https://config.cc.toronto.ca:49093/c3api_data/v2/DataAccess.svc/pothole_data/pothole_dev`
+    },
+    dev: {
+      DATA: `https://config.cc.toronto.ca:49093/c3api_data/v2/DataAccess.svc/pothole_data/pothole_dev`
+    },
+    qa: {
+      DATA: `https://config.cc.toronto.ca:49093/c3api_data/v2/DataAccess.svc/pothole_data/pothole_qa`
+    },
     prod: {}
   }
 });

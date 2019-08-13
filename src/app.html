@@ -22,13 +22,17 @@ See examples below in the boilerplate code
 
 <!-- cot-app:body -->
 <div id="fepe_pothole_container">
-  <h2>Total Potholes Filled By Year</h2>
-  <div id="filled-counts" class="row"></div>
-  <h2>Potholes filled for the period of January 1 - July 21</h2>
+  
   <div class="row">
-    <div id="filter-button" class="col-xs-12"></div>
-    <cotui-chart id="pothole-bar" class="col-xs-12" chart-type="bar" chart-stacked="false" chart-title="Year To Date Potholes Filled" x-axisLabel="Fill Date" y-axisLabel="Total Fills" style="height: 600px;"></cotui-chart>
+    <h2>Total Potholes Filled By Year</h2>
+    <span id="filled-counts" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px,1fr)); grid-column-gap: 1em;"></span>
   </div>
+  <div class="row">
+    <h2>Potholes filled year to date</h2>
+    <div id="filter-button" class="btn-group" aria-label="Pothole Data Selector"></div>
+    <cotui-chart id="pothole-bar" class="col-xs-12" chart-type="bar" chart-stacked="false" chart-title="Year To Date Potholes Filled" chart-title-hide="true" x-axisLabel="Fill Date" y-axisLabel="Total Fills" style="height: 600px;"></cotui-chart>
+  </div>
+
 </div>
 <!-- cot-app:body end-->
 

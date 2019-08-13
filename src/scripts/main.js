@@ -16,54 +16,80 @@ String.prototype.formatNumber = function(places=0) {
 }
 
 
+const getJSON = (url)=>{
+
+  return new Promise(function(resolve,reject){
+      const request = new XMLHttpRequest();
+      request.open('GET', url, true);
+      if(request){
+        request.onload = function() {
+            if (request.status >= 200 && request.status < 400) {
+                // Success!
+                const data = JSON.parse(request.responseText);
+                resolve(data);
+            } else {
+                reject(new Error(`Error: ${JSON.parse(request.response)}`) )
+                // We reached our target server, but it returned an error
+            }
+        };
+        request.onerror = function() {
+          // There was a connection error of some sort
+          };
+          request.send();
+      }
+     
+  })
+}
+
+
 class Dashboard{
   constructor(){}
 
   Model(){
-    return{
-      meta:{
-        title:'',
-        enableSearch: true,
-        cssGrid:{
-          master:{
-            'grid-template-columns': '40px 50px auto 50px 40px',
-            'grid-template-rows': '25% 100px auto'
-          },
-          detail:{
-            'grid-template-columns': '40px 50px auto 50px 40px',
-            'grid-template-rows': '25% 100px auto'
-          }
-        },
-        layout:[{
-          panelID: 'panel--0000',
-          class:'',
-          icon:'png|gif|svg',
-          widget:'card',
-          widgetLink: 'master-detail', // http(s?)://
+      return{
+        meta:{
+          title:'',
+          enableSearch: true,
           cssGrid:{
-            'grid-column-start': '2',
-            'grid-column-end': 'five',
-            'grid-row-start': 'row1-start',
-            'grid-row-end': '3'
+            master:{
+              'grid-template-columns': '40px 50px auto 50px 40px',
+              'grid-template-rows': '25% 100px auto'
+            },
+            detail:{
+              'grid-template-columns': '40px 50px auto 50px 40px',
+              'grid-template-rows': '25% 100px auto'
+            }
+          },
+          layout:[{
+            panelID: 'panel--0000',
+            class:'',
+            icon:'png|gif|svg',
+            widget:'card',
+            widgetLink: 'master-detail', // http(s?)://
+            cssGrid:{
+              'grid-column-start': '2',
+              'grid-column-end': 'five',
+              'grid-row-start': 'row1-start',
+              'grid-row-end': '3'
+            }
+          }]
+        },
+        panels:[{
+          id:'panel-0000',
+          label: 'Number of Personal Bankruptcies\n(Ontario)',
+          caption: '',
+          description:'',
+          body:'',
+
+          category:['Community Vulnerability'],
+          keywords:[''],
+          data:{
+            calculatedValue: null,
+            labels:[],
+            datasets:{ label:'', data:[] }
           }
         }]
-      },
-      panels:[{
-        id:'panel-0000',
-        label: 'Number of Personal Bankruptcies\n(Ontario)',
-        caption: '',
-        description:'',
-        body:'',
-
-        category:['Community Vulnerability'],
-        keywords:[''],
-        data:{
-          calculatedValue: null,
-          labels:[],
-          datasets:{ label:'', data:[] }
-        }
-      }]
-    }
+      }
   }
 }
 
@@ -72,19 +98,27 @@ class Dashboard{
 class PotholeData{
   constructor(){
     _self = this;
+    this.url = '/*@echo DATA*/?$format=json&unwrap=true';
+    this.months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+    this.colours = ['#20313F','#204854','#1C6166','#207B71','#359576','#58AE75','#83C670','#B5DC6A','#EFEE66'].reverse();
   }
+  
 
+  
 
-  getData(dimension='ytd',year){
+  getData(dimension,filter){
+    
+    
+    
     const onClick = function(dimension,e,d,t){
-      var p = new window.PotholeData();
       
-      
-      if(d.length > 0){
-        document.getElementById('filter-button').style.display = null;
-        let $potholeBar = document.getElementById('pothole-bar');
-        //$potholeBar.data = p.getData(dimension, year);
 
+
+     
+      /*
+      if(d.length > 0){
+        //document.getElementById('filter-button').style.display = null;
+        let $potholeBar = document.getElementById('pothole-bar');
         
         d.forEach(dta=>{
           //dta._chart.chart.options = p.getData(dimension).chartOptions;         
@@ -96,59 +130,100 @@ class PotholeData{
         })
         
       }
+      */
       //$potholeBar.updateComponent();
     }
+    
+    
+    
 
+    var orderby = (function(){
+      return dimension.split(',').map(d=>{
+        return `${d} desc`
+      }).join(',');
+    })();
 
-    // Return Monthly Data
-    if(dimension == 'mth')
-    return {
-      chartOptions:{ onClick:()=>{} },
-      chartData:{
-        labels:['January','February','March','April','May','June','July','August','September','October','November','December'],
-        datasets:[{
-          label:'2019',
-          data:[18000,1900,200000,98000,62000,100].reverse(),
-          backgroundColor: '#ca433e'
-        },{
-          label:'2018',
-          data:[351,1935,19480,115,81688,241].reverse(),
-          backgroundColor: '#ca433e'
-        },{
-          label:'2017',
-          data:[31,1365,1540,11665,1688,2431].reverse(),
-          backgroundColor: '#ca433e'
-        },{
-          label:'2016',
-          data:[311,1963,15948,131,18688,431].reverse(),
-          backgroundColor: '#ca433e'
-        }].filter(set=>{
-         
-          if(set.label == year){
-            return set;
+    console.log(orderby);
+
+    return getJSON(`${this.url}&$apply=${filter?`filter(YEAR eq '${filter}')/`:``}groupby((${dimension}))/aggregate(POTHOLESFILLED with sum as total)&$orderby=${orderby}`).then(res=>{
+
+      var datasets = [];
+      var labels = []; 
+      var data =[];
+      var backgroundColor;
+      if(dimension != 'YEAR'){
+        backgroundColor = this.colours;
+        labels = this.months;
+        var obj = {}
+        res.map((dataset,ndx)=>{
+          var label='' 
+          var index = parseInt(dataset[dimension.split(',')[0]]-1);
+          data[index] = dataset['total']||null
+          if( obj[ dataset[dimension.split(',')[1]] ] === undefined){
+            obj[ dataset[dimension.split(',')[1]] ] = new Array(11);
           }
-
+          obj[ dataset[dimension.split(',')[1]] ][index ] = dataset['total']||null
         })
+
+        var ndx = 0;
+        for(var year in obj){
+          datasets.push({
+            label: year,
+            data: obj[year],
+            backgroundColor:backgroundColor[ndx]
+          })
+          ndx++
+        }
+
+        datasets.sort(function(b,a){
+          return a.label - b.label;
+        });
       }
-    }
 
+      if(dimension == 'YEAR'){
+        backgroundColor = '#655d6b';
+        res.map((dataset,ndx)=>{
+          labels.push( dataset[dimension] );
+          data.push( dataset['total'] );          
+        })
 
-
-    // Return Yearly Data
-    if(dimension == 'ytd')
-    return {
-      chartOptions:{ 
-        onClick:function(e,d,t){ onClick('mth',e,d,t);}
-      },
-      chartData:{
-        labels:[2019,2018,2017,2016,2015],
-        datasets:[{
-          label:'Total Potholes Filled',
-          data:[196365,159480,131665,181688,291431].reverse(),
-          backgroundColor: '#a09e9c'
+        datasets = [{
+          label:'Total Potholes',
+          data,
+          backgroundColor
         }]
       }
-    }
+
+
+
+      return({
+        chartOptions:{
+          onClick:function(e,d,t){
+            /*
+            switch(dimension){
+              case 'MONTH':
+                  _self.getData('YEAR').then(res=>{
+                    let $potholeBar = document.getElementById('pothole-bar');
+                    $potholeBar.data = res;
+                  })
+                
+                break;
+              case 'YEAR':
+                  _self.getData("MONTH",d[0]._model.label ).then(res=>{
+                    let $potholeBar = document.getElementById('pothole-bar');
+                    $potholeBar.data = res;
+                  })
+                break;
+            }
+            */
+          }
+        },
+        chartData:{
+          labels,
+          datasets
+        }
+      });
+    })
   }
 }
 
@@ -170,11 +245,30 @@ $(function () {
   let container = $('#fepe_pothole_container');
 
 
-  let $potholeBar = document.getElementById('pothole-bar');
+
   var phdata = new PotholeData();
-  $potholeBar.data = phdata.getData('ytd');
+  var colours=['#070f2b','#1f78b4','#b2df8a','#33a02c','#fb9a99','#e31a1c','#fdbf6f','#ff7f00','#cab2d6'];
+  phdata.getData('YEAR').then(res=>{
+    console.log("DATA", res );
+    let $potholeBar = document.getElementById('pothole-bar');
+    $potholeBar.data = res;
 
-
+    
+    res.chartData.labels.forEach((label,ndx)=>{
+      const $card = document.createElement('cotui-chart');
+      $card.id = `filled-counts-${label}`;
+      $card.setAttribute('chart-type','card');
+      $card.setAttribute('chart-title',`${label}`);
+      $card.setAttribute('chart-value', res.chartData.datasets[0].data[ndx].toString().formatNumber());
+      $card.setAttribute('chart-colour', '#070f2b');
+      $card.setAttribute('style',``);
+      $card.caption = "Last Updated";
+      //$card.data = phYTD.chartData.datasets[0].data[ndx].toString().formatNumber();
+      $potholeFilled.append($card);
+    })
+    
+  });
+  
 
 
 
@@ -184,29 +278,20 @@ $(function () {
   
   let $potholeFilled = document.getElementById('filled-counts');
   $potholeFilled.style.fontSize = '0.865em';
-  let phYTD= phdata.getData('ytd');
-  phYTD.chartData.labels.forEach((label,ndx)=>{
-    const $card = document.createElement('cotui-chart');
-    $card.id = `filled-counts-${label}`;
-    $card.setAttribute('chart-type','card');
-    $card.setAttribute('chart-title',`${label}`);
-    $card.setAttribute('chart-value', phYTD.chartData.datasets[0].data[ndx].toString().formatNumber());
-    $card.setAttribute('chart-colour', '#030f29');
-    $card.setAttribute('style',`width:${100/(phYTD.chartData.labels.length+1)}%; display:inline-block; margin: 0 5px`);
-    $card.caption = "Last Updated";
-    //$card.data = phYTD.chartData.datasets[0].data[ndx].toString().formatNumber();
-    $potholeFilled.append($card);
-  });
+ 
 
 
   // DataFilters Update Chart Based on function
     var widget = document.getElementById('pothole-bar');
     var $filters = document.getElementById('filter-button');
 
-    $filters.style.display='none';
+    //$filters.style.display='none';
     [{
-      label:'Back',
-      func:'ytd'
+      label:'Years',
+      func:'YEAR'
+    },{
+      label:'Months',
+      func:'MONTH,YEAR'
     }].forEach(btn=>{
       var $btn = document.createElement('button');
       $btn.type = 'button';
@@ -215,8 +300,10 @@ $(function () {
       $btn.innerText = btn.label;
       $btn.addEventListener('click',(evt)=>{
         evt.preventDefault();
-        widget.data = phdata.getData(btn.func);
-        $filters.style.display='none';
+        phdata.getData(btn.func).then(res=>{
+          widget.data = res;
+        })
+        
         /*
         widget.getPlugin().then(ChartJS=>{
           ChartJS.chart.data = phdata.getData(btn.func).chartData;
