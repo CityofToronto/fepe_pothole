@@ -249,10 +249,8 @@ $(function () {
   var phdata = new PotholeData();
   var colours=['#070f2b','#1f78b4','#b2df8a','#33a02c','#fb9a99','#e31a1c','#fdbf6f','#ff7f00','#cab2d6'];
   phdata.getData('YEAR').then(res=>{
-    console.log("DATA", res );
     let $potholeBar = document.getElementById('pothole-bar');
     $potholeBar.data = res;
-
     
     res.chartData.labels.forEach((label,ndx)=>{
       const $card = document.createElement('cotui-chart');
@@ -260,11 +258,11 @@ $(function () {
       $card.setAttribute('chart-type','card');
       $card.setAttribute('chart-title',`${label}`);
       $card.setAttribute('chart-value', res.chartData.datasets[0].data[ndx].toString().formatNumber());
-      $card.setAttribute('chart-colour', '#070f2b');
+      $card.setAttribute('chart-colour', '#655d6b');
       $card.setAttribute('style',``);
       $card.caption = "Last Updated";
       //$card.data = phYTD.chartData.datasets[0].data[ndx].toString().formatNumber();
-      $potholeFilled.append($card);
+      if(ndx < 5)  $potholeFilled.append($card);
     })
     
   });
