@@ -9,10 +9,12 @@ core.embeddedApp.createTasks(gulp, {
   deploymentPath: '',
   preprocessorContext: {
     local: {
-      DATA: `https://config.cc.toronto.ca:49093/c3api_data/v2/DataAccess.svc/pothole_data/pothole_dev`
+      DATA_ANNUAL: `https://config.cc.toronto.ca:49093/c3api_data/v2/DataAccess.svc/pothole_data/pothole_dev_annual`,
+      DATA_YTD: `https://config.cc.toronto.ca:49093/c3api_data/v2/DataAccess.svc/pothole_data/pothole_dev_ytd`
     },
     dev: {
-      DATA: `https://config.cc.toronto.ca:49093/c3api_data/v2/DataAccess.svc/pothole_data/pothole_dev`
+      DATA_ANNUAL: `https://config.cc.toronto.ca:49093/c3api_data/v2/DataAccess.svc/pothole_data/pothole_dev_annual`,
+      DATA_YTD: `https://config.cc.toronto.ca:49093/c3api_data/v2/DataAccess.svc/pothole_data/pothole_dev_ytd`
     },
     qa: {
       DATA: `https://config.cc.toronto.ca:49093/c3api_data/v2/DataAccess.svc/pothole_data/pothole_qa`
