@@ -108,36 +108,36 @@ class PotholeData{
   }
   
 
-  calculateYearToDate(datasets){
-    console.log('YTD',datasets)
-    var b = new Array(datasets[0].data).fill(0);
+  calculateCumulativeData(datasets,id){
+    var b = [null];
     var sum = 0;
-    var a = datasets[0].data.reduce((prev,curr,ndx,arr)=>{
-      sum += curr;
+    datasets[0].data.reduce((prev,curr,ndx,arr)=>{
+      sum += arr[ndx-1];
       b.push(sum);
-
-      console.log(b,sum)
     });
 
-    return [{
-      id:'ytd',
+    var dataset = [{
+      id:`ytd-${datasets[0].label}`,
       label:'Previous Total',
       backgroundColor:'#ddd',
       data:b
     },{
-      id:'ytd',
+      id:`ytd-${datasets[0].label}`,
       label:'Added',
       backgroundColor:datasets[0].backgroundColor,
       data:datasets[0].data,
     }]
-    
+
+    console.debug('calculateCumulativeData',datasets,id, dataset)
+    return dataset 
   }
 
   getData(dimension = this.dimension,filter=this.filter){
-    console.log('getData',dimension,filter);
+    console.debug('getData',dimension,filter, document.getElementById("ytd_toggle").checked);
     
     const showYTD = document.getElementById("ytd_toggle").checked;
-    const url = showYTD?'/*@echo DATA_YTD*/?$format=json&unwrap=true':'/*@echo DATA_ANNUAL*/?$format=json&unwrap=true';
+    //const url = showYTD?'/*@echo DATA_YTD*/?$format=json&unwrap=true':'/*@echo DATA_ANNUAL*/?$format=json&unwrap=true';
+    const url = '/*@echo DATA_ANNUAL*/?$format=json&unwrap=true';
     const onClick = function(dimension,e,d,t){
        
       /*
@@ -159,9 +159,6 @@ class PotholeData{
       //$potholeBar.updateComponent();
     }
     
-    
-    
-
     var orderby = (function(){
       return dimension.split(',').map(d=>{
         return `${d} asc`
@@ -169,7 +166,7 @@ class PotholeData{
     })();
 
     return getJSON(`${url}&$apply=${filter?`filter(YEAR eq '${filter}')/`:``}groupby((${dimension}))/aggregate(POTHOLESFILLED with sum as total)&$orderby=${orderby}`).then(res=>{
-
+      console.debug('getJSON',filter, res)
       var datasets = [];
       var labels = []; 
       var data =[];
@@ -211,15 +208,14 @@ class PotholeData{
         })
 
         datasets = [{
-          label:showYTD?`Total Potholes Filled as of ${this.months[this.today.getMonth()]} ${this.today.getDate()} `:'Total Potholes Filled By Year',
+          label:`Total Potholes Filled By Year ${filter?filter:''}`.trim(),
           data,
           backgroundColor
         }]
       }
 
-
-      if(showYTD && dimension != 'YEAR'){
-        datasets = this.calculateYearToDate(datasets);
+      if(showYTD){
+        datasets = this.calculateCumulativeData(datasets);
       }
 
 
@@ -282,32 +278,35 @@ $(function () {
 
 
   updateCards=function(res){
+    console.debug('updateCards', res, res.chartData.labels)
     let showYTD = document.getElementById("ytd_toggle").checked;
     let $potholeBar = document.getElementById('pothole-bar');
         $potholeBar.data = res;
 
         $potholeFilled.innerHTML = '';
-        document.querySelector('h2').innerText = showYTD?`Total Potholes Filled as of ${PHDATA.months[PHDATA.today.getMonth()]} ${PHDATA.today.getDate()} `:'Total Potholes Filled By Year'
-      
+        // document.querySelector('h2').innerText = showYTD?`Total Potholes Filled as of ${PHDATA.months[PHDATA.today.getMonth()]} ${PHDATA.today.getDate()} `:'Total Potholes Filled By Year'
+        document.querySelector('h2').innerText = 'Total Potholes Filled By Year'
+
       res.chartData.labels.forEach((label,ndx)=>{
         const $card = document.createElement('cotui-chart');
         $card.id = `filled-counts-${label}`;
         $card.setAttribute('chart-type','card');
         $card.setAttribute('chart-title',`${label}`);
-        $card.setAttribute('chart-value', res.chartData.datasets[0].data[ndx].toString().formatNumber());
+        $card.setAttribute('chart-value', res.chartData.datasets[showYTD?1:0].data[ndx].toString().formatNumber());
         $card.setAttribute('chart-colour', PHDATA.colours[ndx]);
-        $card.setAttribute('href', '#');
+        $card.setAttribute('href', '#filled-counts');
         $card.setAttribute('style',``);
         $card.caption = "Last Updated"; 
         $card.addEventListener('click',evt=>{
-          PHDATA.dimension = !showYTD?'MONTH,YEAR':'YEAR';
-          PHDATA.filter = !showYTD?label:null;
-          PHDATA.getData().then(res=>{
-            res.chartData.datasets[0].backgroundColor = PHDATA.colours[ndx];
+          PHDATA.dimension = 'MONTH,YEAR';
+          PHDATA.filter = label;
+          PHDATA.getData('MONTH,YEAR',label).then(res=>{
+            res.chartData.datasets[showYTD?1:0].backgroundColor = PHDATA.colours[ndx];
             $widget.data = res;
           })
 
         });
+        
         if(ndx < 5)  $potholeFilled.append($card);
       })
   }
@@ -362,17 +361,18 @@ $(document).ready(function(){
   const handleChange = function(evt){
     if(!$ytdToggle.checked){
       $ytdToggle.checked = true;
-      PHDATA.getData().then(res=>{
+      PHDATA.getData('YEAR',null).then(res=>{
         updateCards(res)
         $widget.data = res;
       })
     } else {
       $ytdToggle.checked = false;
-      PHDATA.getData().then(res=>{
+      PHDATA.getData('YEAR',null).then(res=>{
         updateCards(res)
         $widget.data = res;
       })
     }
+    
   }
 
   $ytdToggleLabel.addEventListener('click',handleChange)

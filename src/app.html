@@ -9,8 +9,6 @@ See examples below in the boilerplate code
     <!-- core:css -->
     <!-- endinject -->
     <!-- place your application stylesheet references here: -->
-    <!--@if ENV=='local'--><link rel="stylesheet" type="text/css" href="../node_modules/cotui/dist/cotui/cotui.css"><!--@endif-->
-
     <link rel="stylesheet" type="text/css" href="<!-- @echo SRC_PATH -->/styles/main.css">
   <!-- endbuild -->
   <!--@exec startBuildTagWithCacheBuster('styles/core_print.css', 'media="print"')-->
@@ -23,30 +21,40 @@ See examples below in the boilerplate code
 <!-- cot-app:body -->
 <div id="fepe_pothole_container">
   
-    <div class="col-xs-12">
-      <div class="row">
-        <div class="col-xs-6">
-          <div id="filter-button" class="btn-group" aria-label="Pothole Data Selector"></div>
-        </div>
-        <div class="col-xs-6" style="text-align:right">
-          <div class="btn-group" data-toggle="buttons">
-            <div>
-              <div class="switch">
-                  <input id="ytd_toggle" type="checkbox"> 
-                  <span class="slider round"></span>
-              </div>
-              <label for="ytd_toggle" aria-controls="ytd_toggle">Show Year To Date</label>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
+    
     <div class="row">
         <div class="col-md-12">
           <h2>Title</h2>
         </div>
       <div class="col-md-12">
-        <span id="filled-counts" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px,1fr)); grid-column-gap: 1em;"></span>
+
+        <div class="row">
+          <div class="col-xs-12">
+            <span id="filled-counts" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px,1fr)); grid-column-gap: 1em;margin-bottom:1em;"></span>
+          </div>
+        </div>
+
+        <div class="col-xs-12">
+            <div class="row">
+              <div class="col-xs-6">
+                <div id="filter-button" class="btn-group" aria-label="Pothole Data Selector"></div>
+              </div>
+              <div class="col-xs-6" style="text-align:right">
+                <div class="btn-group" data-toggle="buttons">
+                  <div>
+                    <div class="switch">
+                        <input id="ytd_toggle" type="checkbox"> 
+                        <span class="slider round"></span>
+                    </div>
+                    <label for="ytd_toggle" aria-controls="ytd_toggle">Show Cumulative Totals</label>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+
+
         <cotui-chart id="pothole-bar" class="col-xs-12" chart-type="bar" chart-stacked="true" chart-title-hide chart-title="Year To Date Potholes Filled" x-axisLabel="Fill Date" y-axisLabel="Total Fills" style="height: 600px;"></cotui-chart>
       </div>
     </div>

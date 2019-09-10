@@ -26,5 +26,6 @@ core.embeddedApp.createTasks(gulp, {
 
 gulp.task('_data', () => {
   let myDataPath = '/resources/cdn/cotui/cotui';
-  gulp.src(['node_modules/cotui/dist/cotui/**/*']).pipe(gulp.dest('dist' + myDataPath));
+  gulp.src(['/usr/local/node_apps/toronto_ca/cot-apps/COT_UI/dist/cotui/**/*']).pipe(gulp.dest('dist' + myDataPath));
+  //gulp.src(['node_modules/cotui/dist/cotui/**/*']).pipe(gulp.dest('dist' + myDataPath));
 })
