@@ -104,40 +104,40 @@ class PotholeData{
 
     this.url = '/*@echo DATA_YTD*/?$format=json&unwrap=true';
     this.months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
-    this.colours = ['#20313F','#204854','#1C6166','#207B71','#359576','#58AE75','#83C670','#B5DC6A','#EFEE66'].reverse();
+    this.colours = null;//['#66c2a5','#fc8d62','#8da0cb','#e78ac3','#a6d854'];
   }
   
 
-  calculateCumulativeData(datasets,id){
+  calculateCumulativeData(_dataset,id){
     var b = [null];
     var sum = 0;
-    datasets[0].data.reduce((prev,curr,ndx,arr)=>{
+    _dataset.data.reduce((prev,curr,ndx,arr)=>{
       sum += arr[ndx-1];
       b.push(sum);
     });
 
-    var dataset = [{
-      id:`ytd-${datasets[0].label}`,
-      label:'Previous Total',
-      backgroundColor:'#ddd',
-      data:b
+    return [{
+      stack:`ytd-${_dataset.label}`,
+      label:`Previous Total (${_dataset.label})`,
+      backgroundColor:'#ddd' ,
+      data:b,
     },{
-      id:`ytd-${datasets[0].label}`,
-      label:'Added',
-      backgroundColor:datasets[0].backgroundColor,
-      data:datasets[0].data,
-    }]
+      stack:`ytd-${_dataset.label}`,
+      label:`Added (${_dataset.label})`,
+      backgroundColor: _dataset.backgroundColor,
+      data:_dataset.data
+    }];
 
-    console.debug('calculateCumulativeData',datasets,id, dataset)
-    return dataset 
+    //console.debug('calculateCumulativeData',_dataset,id, updatedDataset, PHDATA.dimension)
+    //return updatedDataset 
   }
 
   getData(dimension = this.dimension,filter=this.filter){
     console.debug('getData',dimension,filter, document.getElementById("ytd_toggle").checked);
     
     const showYTD = document.getElementById("ytd_toggle").checked;
-    //const url = showYTD?'/*@echo DATA_YTD*/?$format=json&unwrap=true':'/*@echo DATA_ANNUAL*/?$format=json&unwrap=true';
-    const url = '/*@echo DATA_ANNUAL*/?$format=json&unwrap=true';
+    const url = showYTD?'/*@echo DATA_YTD*/?$format=json&unwrap=true':'/*@echo DATA_ANNUAL*/?$format=json&unwrap=true';
+    //const url = '/*@echo DATA_ANNUAL*/?$format=json&unwrap=true';
     const onClick = function(dimension,e,d,t){
        
       /*
@@ -170,58 +170,92 @@ class PotholeData{
       var datasets = [];
       var labels = []; 
       var data =[];
-      var backgroundColor;
+      var backgroundColor = this.colours;
       if(dimension != 'YEAR'){
-        backgroundColor = this.colours;
+        var datasetTemp = [];
         labels = this.months;
         var obj = {}
         res.map((dataset,ndx)=>{
           var label='' 
           var index = parseInt(dataset[dimension.split(',')[0]]-1);
           data[index] = dataset['total']||null
+
           if( obj[ dataset[dimension.split(',')[1]] ] === undefined){
-            obj[ dataset[dimension.split(',')[1]] ] = new Array(11);
-          }
+            obj[ dataset[dimension.split(',')[1]] ] = new Array(11)
+          }         
           obj[ dataset[dimension.split(',')[1]] ][index ] = dataset['total']||null
+
+          console.log('SHOW_YTD_COLOR',obj,filter,typeof(backgroundColor)=='string',backgroundColor)
         })
+
+        
+
 
         var ndx = 0;
         for(var year in obj){
-          datasets.push({
-            label: year,
-            data: obj[year],
-            backgroundColor:backgroundColor[ndx]
-          })
+          if(typeof(backgroundColor)=='object'){
+            datasetTemp.push({
+              label: year,
+              data: obj[year],
+              backgroundColor: backgroundColor[ndx]
+            })
+          } else {
+            datasetTemp.push({
+              label: year,
+              data: obj[year],
+              backgroundColor: backgroundColor
+            })
+          }
           ndx++;
         }
 
-        datasets.sort(function(a,b){
+        datasetTemp.sort(function(a,b){
           return a.label - b.label;
         });
+
+        datasets = datasetTemp;
       }
 
       if(dimension == 'YEAR'){
-        backgroundColor = this.colours;
+        var datasetTemp = [];
         res.map((dataset,ndx)=>{
           labels.push( dataset[dimension] );
           data.push( dataset['total'] );          
         })
 
-        datasets = [{
+        datasetTemp = [{
           label:`Total Potholes Filled By Year ${filter?filter:''}`.trim(),
           data,
           backgroundColor
         }]
+
+        datasets = datasetTemp;
       }
 
       if(showYTD){
-        datasets = this.calculateCumulativeData(datasets);
+        var d = new Array()
+        var d = datasets.map((dataset,ndx)=>{
+          console.log('SHOW_YTD',dataset);
+          
+          return this.calculateCumulativeData(dataset,ndx);
+
+
+        })
+        
+        datasetTemp = new Array();
+        d.forEach(dset=>{
+          datasetTemp.push(dset[0])
+          datasetTemp.push(dset[1])
+        })
+
+        datasets = datasetTemp;
+        
       }
 
 
       return({
         chartOptions:{
-          showCount: true,
+          //showCount: false,
           onClick:function(e,d,t){
             /*
             switch(dimension){
@@ -255,6 +289,7 @@ class PotholeData{
 
 
 var PHDATA;
+var colours = ['#66c2a5','#fc8d62','#8da0cb','#e78ac3','#a6d854'];
 var updateCards;
 
 $(function () {
@@ -270,7 +305,11 @@ $(function () {
   let container = $('#fepe_pothole_container');
 
   PHDATA = new PotholeData();
+  PHDATA.colours = colours;
   PHDATA.dimension = 'YEAR'
+
+
+
   var $potholeFilled = document.getElementById('filled-counts');
       $potholeFilled.style.fontSize = '0.865em';
   var $widget = document.getElementById('pothole-bar');
@@ -289,30 +328,35 @@ $(function () {
 
       res.chartData.labels.forEach((label,ndx)=>{
         const $card = document.createElement('cotui-chart');
+        const chartColour = PHDATA.colours[ndx]
         $card.id = `filled-counts-${label}`;
         $card.setAttribute('chart-type','card');
-        $card.setAttribute('chart-title',`${label}`);
+        $card.setAttribute('chart-title',label);
         $card.setAttribute('chart-value', res.chartData.datasets[showYTD?1:0].data[ndx].toString().formatNumber());
-        $card.setAttribute('chart-colour', PHDATA.colours[ndx]);
+        $card.setAttribute('chart-colour', chartColour );
         $card.setAttribute('href', '#filled-counts');
         $card.setAttribute('style',``);
-        $card.caption = "Last Updated"; 
+        $card.setAttribute('caption',`${ndx == res.chartData.labels.length-1?`Year-to-Date`:`Year-End`}`); 
         $card.addEventListener('click',evt=>{
+          document.getElementById('js-chart-title').innerHTML = `Potholes Filled in ${label} by Month`
+          var $monthToggle = document.getElementById('month_toggle');
+          $monthToggle.checked = true;
+          PHDATA.colours = chartColour;
           PHDATA.dimension = 'MONTH,YEAR';
           PHDATA.filter = label;
-          PHDATA.getData('MONTH,YEAR',label).then(res=>{
-            res.chartData.datasets[showYTD?1:0].backgroundColor = PHDATA.colours[ndx];
+          PHDATA.getData().then(res=>{
+            //res.chartData.datasets[showYTD?0:1].backgroundColor = PHDATA.colours[ndx];
             $widget.data = res;
           })
 
         });
         
-        if(ndx < 5)  $potholeFilled.append($card);
+        if(ndx < 5)  $potholeFilled.append($card);        
       })
   }
 
 
-  PHDATA.getData('YEAR',null).then(res=>updateCards(res))
+  PHDATA.getData().then(res=>updateCards(res))
   
   //var colours=['#070f2b','#1f78b4','#b2df8a','#33a02c','#fb9a99','#e31a1c','#fdbf6f','#ff7f00','#cab2d6'];
   
@@ -361,14 +405,17 @@ $(document).ready(function(){
   const handleChange = function(evt){
     if(!$ytdToggle.checked){
       $ytdToggle.checked = true;
-      PHDATA.getData('YEAR',null).then(res=>{
-        updateCards(res)
+      
+      PHDATA.getData().then(res=>{
+        //res.chartOptions.showCount = true;
+        $widget.stacked = true;
         $widget.data = res;
       })
     } else {
       $ytdToggle.checked = false;
-      PHDATA.getData('YEAR',null).then(res=>{
-        updateCards(res)
+      PHDATA.getData().then(res=>{
+        //res.chartOptions.showCount = false;
+        $widget.stacked = false;
         $widget.data = res;
       })
     }
@@ -380,4 +427,43 @@ $(document).ready(function(){
    if(evt.keyCode == 32) handleChange();
   })
   $ytdToggle.parentElement.addEventListener('click',handleChange)
+
+
+  // MTD Toggle
+  var $monthToggle = document.getElementById('month_toggle');
+  var $monthToggleLabel = $monthToggle.parentElement.parentElement.querySelector('[for="month_toggle"]');
+  var $componentMonth = $monthToggle.parentElement.parentElement
+      $componentMonth.setAttribute('tabindex','0');
+      
+  
+  const handleMonthChange = function(evt){
+    if(!$monthToggle.checked){
+      $monthToggle.checked = true;
+      PHDATA.dimension = 'MONTH,YEAR';
+      //PHDATA.filter = null;
+      PHDATA.getData().then(res=>{
+        $widget.data = res;
+      })
+    } else {
+      $monthToggle.checked = false;
+      PHDATA.dimension = 'YEAR';
+      PHDATA.colours = colours;
+      //PHDATA.filter = null;
+      PHDATA.getData().then(res=>{
+        $widget.stacked = false;
+        $widget.data = res;
+
+      })
+    }
+    
+  }
+
+  $monthToggleLabel.addEventListener('click',handleMonthChange)
+  $componentMonth.addEventListener('keydown',evt=>{
+   if(evt.keyCode == 32) handleMonthChange();
+  })
+  $monthToggle.parentElement.addEventListener('click',handleMonthChange)
+
+
+
 });

@@ -33,29 +33,49 @@ See examples below in the boilerplate code
             <span id="filled-counts" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px,1fr)); grid-column-gap: 1em;margin-bottom:1em;"></span>
           </div>
         </div>
+        
+        <div class="row">
+          <div class="col-xs-3">
+            <div id="filter-button" class="btn-group" aria-label="Pothole Data Selector"></div>
 
-        <div class="col-xs-12">
-            <div class="row">
-              <div class="col-xs-6">
-                <div id="filter-button" class="btn-group" aria-label="Pothole Data Selector"></div>
-              </div>
-              <div class="col-xs-6" style="text-align:right">
-                <div class="btn-group" data-toggle="buttons">
-                  <div>
-                    <div class="switch">
-                        <input id="ytd_toggle" type="checkbox"> 
-                        <span class="slider round"></span>
-                    </div>
-                    <label for="ytd_toggle" aria-controls="ytd_toggle">Show Cumulative Totals</label>
+
+            <div class="btn-group" data-toggle="buttons">
+                <div>
+                  <div class="switch">
+                      <input id="month_toggle" type="checkbox"> 
+                      <span class="slider round"></span>
                   </div>
+                  <label for="month_toggle" aria-controls="ytd_toggle">Show Monthly</label>
                 </div>
               </div>
-            </div>
+
+
+          </div>
+
+
+          <div class="col-xs-6" style="text-align:center">
+            <h2 id="js-chart-title" class="pothole__chart-title">Potholes Filled in the Past Five Years</h2>
           </div>
 
 
 
-        <cotui-chart id="pothole-bar" class="col-xs-12" chart-type="bar" chart-stacked="true" chart-title-hide chart-title="Year To Date Potholes Filled" x-axisLabel="Fill Date" y-axisLabel="Total Fills" style="height: 600px;"></cotui-chart>
+          <div class="col-xs-3" style="text-align:right">
+            <div class="btn-group" data-toggle="buttons">
+              <div>
+                <div class="switch">
+                    <input id="ytd_toggle" type="checkbox"> 
+                    <span class="slider round"></span>
+                </div>
+                <label for="ytd_toggle" aria-controls="ytd_toggle">Show Cumulative Totals</label>
+              </div>
+            </div>
+          </div>
+        </div>
+          
+
+
+
+        <cotui-chart id="pothole-bar" class="col-xs-12" chart-type="bar" chart-stacked="false" chart-title-hide chart-title="Year To Date Potholes Filled" x-axisLabel="Fill Date" y-axisLabel="Total Fills" style="height: 600px;"></cotui-chart>
       </div>
     </div>
 
