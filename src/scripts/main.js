@@ -105,6 +105,7 @@ class PotholeData{
     this.url = '/*@echo DATA_YTD*/?$format=json&unwrap=true';
     this.months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
     this.colours = null;//['#66c2a5','#fc8d62','#8da0cb','#e78ac3','#a6d854'];
+    this.maxYears = 4;
   }
   
 
@@ -127,9 +128,6 @@ class PotholeData{
       backgroundColor: _dataset.backgroundColor,
       data:_dataset.data
     }];
-
-    //console.debug('calculateCumulativeData',_dataset,id, updatedDataset, PHDATA.dimension)
-    //return updatedDataset 
   }
 
   getData(dimension = this.dimension,filter=this.filter){
@@ -165,27 +163,27 @@ class PotholeData{
       }).join(',');
     })();
 
+    
     return getJSON(`${url}&$apply=${filter?`filter(YEAR eq '${filter}')/`:``}groupby((${dimension}))/aggregate(POTHOLESFILLED with sum as total)&$orderby=${orderby}`).then(res=>{
       console.debug('getJSON',filter, res)
       var datasets = [];
       var labels = []; 
       var data =[];
       var backgroundColor = this.colours;
+
       if(dimension != 'YEAR'){
         var datasetTemp = [];
         labels = this.months;
         var obj = {}
         res.map((dataset,ndx)=>{
-          var label='' 
-          var index = parseInt(dataset[dimension.split(',')[0]]-1);
-          data[index] = dataset['total']||null
+            var label='' 
+            var index = parseInt(dataset[dimension.split(',')[0]]-1);
+            data[index] = dataset['total']||null
 
-          if( obj[ dataset[dimension.split(',')[1]] ] === undefined){
-            obj[ dataset[dimension.split(',')[1]] ] = new Array(11)
-          }         
-          obj[ dataset[dimension.split(',')[1]] ][index ] = dataset['total']||null
-
-          console.log('SHOW_YTD_COLOR',obj,filter,typeof(backgroundColor)=='string',backgroundColor)
+            if( obj[ dataset[dimension.split(',')[1]] ] === undefined){
+              obj[ dataset[dimension.split(',')[1]] ] = new Array(11)
+            }         
+            obj[ dataset[dimension.split(',')[1]] ][index ] = dataset['total']||null
         })
 
         
@@ -213,45 +211,62 @@ class PotholeData{
           return a.label - b.label;
         });
 
-        datasets = datasetTemp;
+        datasets = datasetTemp.filter((v,i)=>{ 
+          var dt = moment().subtract(this.maxYears,'years');
+          if(!filter){
+            return dt.format('YYYY') < parseInt(v.label);
+          } else {
+            return true;
+          }
+        })
       }
 
+      
       if(dimension == 'YEAR'){
         var datasetTemp = [];
         res.map((dataset,ndx)=>{
           labels.push( dataset[dimension] );
-          data.push( dataset['total'] );          
+          data.push( dataset['total'] );
+          
+          
+          datasetTemp.push({
+            label:dataset[dimension]||`Total Potholes Filled By Year ${filter?filter:''}`.trim(),
+            data:[dataset['total']],
+            backgroundColor:backgroundColor[ndx]
+          })
         })
 
+        /*
         datasetTemp = [{
-          label:`Total Potholes Filled By Year ${filter?filter:''}`.trim(),
+          label:labels||`Total Potholes Filled By Year ${filter?filter:''}`.trim(),
           data,
           backgroundColor
         }]
-
+        */
         datasets = datasetTemp;
+      
       }
+      
 
       if(showYTD){
         var d = new Array()
         var d = datasets.map((dataset,ndx)=>{
           console.log('SHOW_YTD',dataset);
-          
           return this.calculateCumulativeData(dataset,ndx);
-
-
         })
         
         datasetTemp = new Array();
-        d.forEach(dset=>{
-          datasetTemp.push(dset[0])
-          datasetTemp.push(dset[1])
+        d.forEach((dset,ndx)=>{
+            datasetTemp.push(dset[0])
+            datasetTemp.push(dset[1])
         })
-
         datasets = datasetTemp;
-        
       }
 
+
+      
+
+      
 
       return({
         chartOptions:{
@@ -289,8 +304,9 @@ class PotholeData{
 
 
 var PHDATA;
-var colours = ['#66c2a5','#fc8d62','#8da0cb','#e78ac3','#a6d854'];
 var updateCards;
+var $widgetMonth = document.getElementById('pothole-bar-month');
+var $widgetYear = document.getElementById('pothole-bar-year');
 
 $(function () {
   if (window['CotApp']) { //the code in this 'if' block should be deleted for embedded apps
@@ -302,168 +318,176 @@ $(function () {
       searchcontext: 'INTER'
     });
   }
-  let container = $('#fepe_pothole_container');
+  let $container = $('#fepe_pothole_container');
 
   PHDATA = new PotholeData();
-  PHDATA.colours = colours;
-  PHDATA.dimension = 'YEAR'
+  PHDATA.colours = ['#d7191c','#fdae61','#c2a5cf','#abd9e9','#2c7bb6']//['#66c2a5','#fc8d62','#8da0cb','#e78ac3','#a6d854'];
+  PHDATA.maxYears = 5;
+  //PHDATA.dimension = 'YEAR'
 
 
-
-  var $potholeFilled = document.getElementById('filled-counts');
-      $potholeFilled.style.fontSize = '0.865em';
-  var $widget = document.getElementById('pothole-bar');
   var $filters = document.getElementById('filter-button');
 
-
-  updateCards=function(res){
-    console.debug('updateCards', res, res.chartData.labels)
+  updateCards=function(res,id){
+    console.debug('updateCards', res, res.chartData.labels);
     let showYTD = document.getElementById("ytd_toggle").checked;
-    let $potholeBar = document.getElementById('pothole-bar');
-        $potholeBar.data = res;
-
+    var $potholeFilled = document.getElementById(id);
         $potholeFilled.innerHTML = '';
-        // document.querySelector('h2').innerText = showYTD?`Total Potholes Filled as of ${PHDATA.months[PHDATA.today.getMonth()]} ${PHDATA.today.getDate()} `:'Total Potholes Filled By Year'
-        document.querySelector('h2').innerText = 'Total Potholes Filled By Year'
-
-      res.chartData.labels.forEach((label,ndx)=>{
-        const $card = document.createElement('cotui-chart');
-        const chartColour = PHDATA.colours[ndx]
-        $card.id = `filled-counts-${label}`;
-        $card.setAttribute('chart-type','card');
-        $card.setAttribute('chart-title',label);
-        $card.setAttribute('chart-value', res.chartData.datasets[showYTD?1:0].data[ndx].toString().formatNumber());
-        $card.setAttribute('chart-colour', chartColour );
-        $card.setAttribute('href', '#filled-counts');
-        $card.setAttribute('style',``);
-        $card.setAttribute('caption',`${ndx == res.chartData.labels.length-1?`Year-to-Date`:`Year-End`}`); 
-        $card.addEventListener('click',evt=>{
-          document.getElementById('js-chart-title').innerHTML = `Potholes Filled in ${label} by Month`
-          var $monthToggle = document.getElementById('month_toggle');
-          $monthToggle.checked = true;
-          PHDATA.colours = chartColour;
-          PHDATA.dimension = 'MONTH,YEAR';
-          PHDATA.filter = label;
-          PHDATA.getData().then(res=>{
-            //res.chartData.datasets[showYTD?0:1].backgroundColor = PHDATA.colours[ndx];
-            $widget.data = res;
-          })
-
-        });
+        $potholeFilled.style.fontSize = '0.865em';
+          
         
-        if(ndx < 5)  $potholeFilled.append($card);        
+      res.chartData.datasets.forEach((dataset,ndx)=>{
+        const $card = document.createElement('cotui-chart');
+        const chartColour = dataset.backgroundColor
+
+        $card.id = `filled-counts-${dataset.label}`;
+        $card.setAttribute('chart-type','card');
+        $card.setAttribute('chart-title',dataset.label);
+        $card.setAttribute('chart-value', dataset.data[0].toString().formatNumber());
+        $card.setAttribute('chart-colour', chartColour );
+        $card.setAttribute('card-style', "" );
+        $card.setAttribute('style',`margin-bottom: 1em;`);
+        $card.setAttribute('caption',`${moment().format('YYYY').toString() == dataset.label?`Year-to-Date`:`Year-End`}`); 
+        
+        /*
+        $card.setAttribute('href', '#filled-counts');
+        $card.addEventListener('click',evt=>{
+          document.querySelectorAll('.reset-view').forEach($btn=>{$btn.hidden = false});
+          var $aria = document.querySelector('.ui-helper-hidden-accessible')
+              if($aria){
+                $aria.classList.add('sr-only');
+                $aria.innerText = `Chart updated to show ${dataset.label} pothole repair data`
+              }
+          PHDATA.getData('MONTH,YEAR',dataset.label).then(res=>{
+            res.chartData.datasets[0].backgroundColor = chartColour;
+            $widgetYear.data = res;
+          })
+        });
+        */
+
+
+        $potholeFilled.append($card);        
       })
   }
 
 
-  PHDATA.getData().then(res=>updateCards(res))
   
-  //var colours=['#070f2b','#1f78b4','#b2df8a','#33a02c','#fb9a99','#e31a1c','#fdbf6f','#ff7f00','#cab2d6'];
-  
-  // DataFilters Update Chart Based on function
-    
-    //$filters.style.display='none';
-    // [{
-    //   label:'Years',
-    //   func:'YEAR'
-    // },{
-    //   label:'Months',
-    //   func:'MONTH,YEAR'
-    // }].forEach(btn=>{
-    //   var $btn = document.createElement('button');
-    //   $btn.type = 'button';
-    //   $btn.classList.add('btn');
-    //   $btn.classList.add('btn-default');
-    //   $btn.innerText = btn.label;
-    //   $btn.addEventListener('click',(evt)=>{
-    //     evt.preventDefault();
-    //     PHDATA.dimension = btn.func;
-    //     PHDATA.getData().then(res=>{
-    //       $widget.data = res;
-    //     })
-        
-    //     /*
-    //     $widget.getPlugin().then(ChartJS=>{
-    //       ChartJS.chart.data = phdata.getData(btn.func).chartData;
-    //       ChartJS.chart.update();
-    //     })
-    //     */
-    //   })
-    //   $filters.append($btn);
-    // })
-    
+  document.getElementById('month').setAttribute('data-label',`${moment().format('YYYY')}  Pothole Repair`);
+  Promise.all([
+    PHDATA.getData('YEAR').then(res=>{
+      
+      updateCards(res,'filled-counts-month');
+
+      /* Only show last full years */
+      let shortListResults = res;
+      let datasetRange = res.chartData.datasets.filter(dataset=>{
+        return parseInt(dataset.label) < moment().format('YYYY')
+      })
+      shortListResults.chartData.datasets = datasetRange;
+      updateCards(shortListResults,'filled-counts-year');
+    }),
+    PHDATA.getData('MONTH,YEAR').then(res=>{ 
+      
+       /* Only show last full years */
+       let datasetRange = res.chartData.datasets.filter(dataset=>{
+        return parseInt(dataset.label) < moment().format('YYYY')
+      })
+      res.chartData.datasets = datasetRange;
+
+      document.getElementById('js-chart-title-year').innerHTML = `Potholes Filled for the Period January 1 &mdash; December 31`
+      document.querySelectorAll('.reset-view__button').forEach($btn=>{
+        $btn.addEventListener('click',evt=>{
+          evt.target.parentElement.hidden = true;
+          PHDATA.getData('MONTH,YEAR').then(res=>{
+            $widgetYear.data = res;
+          })
+        })
+      })
+      $widgetYear.data=res 
+    }),
+
+    PHDATA.getData('MONTH,YEAR').then(res=>{ 
+      let total = 0;
+      let monthNumber;
+      
+
+      res.chartData.datasets.forEach(dataset=>{
+        dataset.data.forEach(d=>{ total += d; });
+        monthNumber = dataset.data.findIndex(function(ele){ return typeof(ele)!='number'  })
+      });
+     
+      document.getElementById('js-chart-title-month').innerHTML = `Potholes Filled for the Period January &mdash; Today`
+      $widgetMonth.data=res 
+    }),
+  ]).then(function(arrayOfValuesOrErrors) {
+    console.log('All Data Loaded');
+  }).catch(err=>{
+    $container.innerHTML = '<div class="well">Error loading data</div>'
+  })    
 });
 
 $(document).ready(function(){
-  var $widget = document.getElementById('pothole-bar');
-  var $ytdToggle = document.getElementById('ytd_toggle');
-  var $ytdToggleLabel = $ytdToggle.parentElement.parentElement.querySelector('[for="ytd_toggle"]');
-  var $component = $ytdToggle.parentElement.parentElement
-      $component.setAttribute('tabindex','0');
+  // var $ytdToggle = document.getElementById('ytd_toggle');
+  // var $ytdToggleLabel = $ytdToggle.parentElement.parentElement.querySelector('[for="ytd_toggle"]');
+  // var $component = $ytdToggle.parentElement.parentElement
+  //     $component.setAttribute('tabindex','0');
+  
+  // const handleChange = function(evt){
+
+  //   if(!$ytdToggle.checked){
+  //     $ytdToggle.checked = true;
+  //   } else {
+  //     $ytdToggle.checked = false;
+  //   }
+    
+  //   PHDATA.getData('MONTH,YEAR').then(res=>{ 
+  //     $widgetMonth.stacked = $ytdToggle.checked;
+  //     $widgetMonth.data = res
+  //   })
+  //   PHDATA.getData('YEAR').then(res=>{ 
+  //     $widgetYear.stacked = $ytdToggle.checked;
+  //     $widgetYear.data = res
+  //   })
+  // }
+
+  // $ytdToggleLabel.addEventListener('click',handleChange)
+  // $component.addEventListener('keydown',evt=>{
+  //  if(evt.keyCode == 32) handleChange();
+  // })
+  // $ytdToggle.parentElement.addEventListener('click',handleChange)
+
+
+  // // MTD Toggle
+  // var $monthToggle = document.getElementById('month_toggle');
+  // var $monthToggleLabel = $monthToggle.parentElement.parentElement.querySelector('[for="month_toggle"]');
+  // var $componentMonth = $monthToggle.parentElement.parentElement
+  //     $componentMonth.setAttribute('tabindex','0');
       
   
-  const handleChange = function(evt){
-    if(!$ytdToggle.checked){
-      $ytdToggle.checked = true;
-      
-      PHDATA.getData().then(res=>{
-        //res.chartOptions.showCount = true;
-        $widget.stacked = true;
-        $widget.data = res;
-      })
-    } else {
-      $ytdToggle.checked = false;
-      PHDATA.getData().then(res=>{
-        //res.chartOptions.showCount = false;
-        $widget.stacked = false;
-        $widget.data = res;
-      })
-    }
+  // const handleMonthChange = function(evt){
+  //   if(!$monthToggle.checked){
+  //     $monthToggle.checked = true;
+  //     PHDATA.dimension = 'MONTH,YEAR';
+  //     //PHDATA.filter = null;
+  //     PHDATA.getData().then(res=>{
+  //       $widgetMonth.data = res;
+  //     })
+  //   } else {
+  //     $monthToggle.checked = false;
+  //     PHDATA.dimension = 'YEAR';
+  //     PHDATA.colours = colours;
+  //     //PHDATA.filter = null;
+  //     PHDATA.getData().then(res=>{
+  //       $widgetMonth.stacked = false;
+  //       $widgetMonth.data = res;
+  //     })
+  //   }
     
-  }
+  // }
 
-  $ytdToggleLabel.addEventListener('click',handleChange)
-  $component.addEventListener('keydown',evt=>{
-   if(evt.keyCode == 32) handleChange();
-  })
-  $ytdToggle.parentElement.addEventListener('click',handleChange)
-
-
-  // MTD Toggle
-  var $monthToggle = document.getElementById('month_toggle');
-  var $monthToggleLabel = $monthToggle.parentElement.parentElement.querySelector('[for="month_toggle"]');
-  var $componentMonth = $monthToggle.parentElement.parentElement
-      $componentMonth.setAttribute('tabindex','0');
-      
-  
-  const handleMonthChange = function(evt){
-    if(!$monthToggle.checked){
-      $monthToggle.checked = true;
-      PHDATA.dimension = 'MONTH,YEAR';
-      //PHDATA.filter = null;
-      PHDATA.getData().then(res=>{
-        $widget.data = res;
-      })
-    } else {
-      $monthToggle.checked = false;
-      PHDATA.dimension = 'YEAR';
-      PHDATA.colours = colours;
-      //PHDATA.filter = null;
-      PHDATA.getData().then(res=>{
-        $widget.stacked = false;
-        $widget.data = res;
-
-      })
-    }
-    
-  }
-
-  $monthToggleLabel.addEventListener('click',handleMonthChange)
-  $componentMonth.addEventListener('keydown',evt=>{
-   if(evt.keyCode == 32) handleMonthChange();
-  })
-  $monthToggle.parentElement.addEventListener('click',handleMonthChange)
-
-
-
+  // $monthToggleLabel.addEventListener('click',handleMonthChange)
+  // $componentMonth.addEventListener('keydown',evt=>{
+  //  if(evt.keyCode == 32) handleMonthChange();
+  // })
+  // $monthToggle.parentElement.addEventListener('click',handleMonthChange)
 });

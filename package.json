@@ -53,7 +53,7 @@
     "includeDatePicker": false,
     "includeLogin": false,
     "includeRangePicker": false,
-    "includeMoment": false,
+    "includeMoment": true,
     "includeModeling": false,
     "includeWebtrends": false,
     "isInternetStandaloneApp": false,

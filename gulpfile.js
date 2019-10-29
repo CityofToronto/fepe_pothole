@@ -17,7 +17,8 @@ core.embeddedApp.createTasks(gulp, {
       DATA_YTD: `https://config.cc.toronto.ca:49093/c3api_data/v2/DataAccess.svc/pothole_data/pothole_dev_ytd`
     },
     qa: {
-      DATA: `https://config.cc.toronto.ca:49093/c3api_data/v2/DataAccess.svc/pothole_data/pothole_qa`
+      DATA_ANNUAL: `https://was-intra-qa.toronto.ca/c3api_data/v2/DataAccess.svc/pothole_data/pothole_qa_annual`,
+      DATA_YTD: `https://was-intra-qa.toronto.ca/c3api_data/v2/DataAccess.svc/pothole_data/pothole_qa_ytd`
     },
     prod: {}
   }
