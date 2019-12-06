@@ -101,6 +101,7 @@ class PotholeData{
     this.today = new Date();
     this.dimension = null;
     this.filter = null;
+    this.showYTD = false;
 
     this.url = '/*@echo DATA_YTD*/?$format=json&unwrap=true';
     this.months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
@@ -130,10 +131,10 @@ class PotholeData{
     }];
   }
 
-  getData(dimension = this.dimension,filter=this.filter){
+  getData(dimension = this.dimension,showYTD=false, filter=this.filter){
     console.debug('getData',dimension,filter, document.getElementById("ytd_toggle").checked);
     
-    const showYTD = document.getElementById("ytd_toggle").checked;
+    //const showYTD = document.getElementById("ytd_toggle").checked;
     const url = showYTD?'/*@echo DATA_YTD*/?$format=json&unwrap=true':'/*@echo DATA_ANNUAL*/?$format=json&unwrap=true';
     //const url = '/*@echo DATA_ANNUAL*/?$format=json&unwrap=true';
     const onClick = function(dimension,e,d,t){
@@ -175,7 +176,12 @@ class PotholeData{
         var datasetTemp = [];
         labels = this.months;
         var obj = {}
-        res.map((dataset,ndx)=>{
+        var resTemp = res.filter(result=>{
+          return result.MONTH <= moment().format('MM');
+        })
+
+
+        resTemp.map((dataset,ndx)=>{
             var label='' 
             var index = parseInt(dataset[dimension.split(',')[0]]-1);
             data[index] = dataset['total']||null
@@ -187,6 +193,7 @@ class PotholeData{
         })
 
         
+        console.log(url,resTemp,obj)
 
 
         var ndx = 0;
@@ -219,6 +226,8 @@ class PotholeData{
             return true;
           }
         })
+
+        console.log(datasets)
       }
 
       
@@ -248,6 +257,7 @@ class PotholeData{
       }
       
 
+      /*
       if(showYTD){
         var d = new Array()
         var d = datasets.map((dataset,ndx)=>{
@@ -262,7 +272,7 @@ class PotholeData{
         })
         datasets = datasetTemp;
       }
-
+      */
 
       
 
@@ -321,16 +331,16 @@ $(function () {
   let $container = $('#fepe_pothole_container');
 
   PHDATA = new PotholeData();
-  PHDATA.colours = ['#d7191c','#fdae61','#c2a5cf','#abd9e9','#2c7bb6']//['#66c2a5','#fc8d62','#8da0cb','#e78ac3','#a6d854'];
+  PHDATA.colours = ['#1170aa','#fc7d0b','#a16bb1','#57606c','#5fa2ce']//['#66c2a5','#fc8d62','#8da0cb','#e78ac3','#a6d854'];
   PHDATA.maxYears = 5;
   //PHDATA.dimension = 'YEAR'
 
 
   var $filters = document.getElementById('filter-button');
 
-  updateCards=function(res,id){
+  updateCards=function(res,id,showYTD){
     console.debug('updateCards', res, res.chartData.labels);
-    let showYTD = document.getElementById("ytd_toggle").checked;
+    //let showYTD = document.getElementById("ytd_toggle").checked;
     var $potholeFilled = document.getElementById(id);
         $potholeFilled.innerHTML = '';
         $potholeFilled.style.fontSize = '0.865em';
@@ -340,14 +350,15 @@ $(function () {
         const $card = document.createElement('cotui-chart');
         const chartColour = dataset.backgroundColor
 
+        const value = dataset.data.reduce((p,c)=>{ return c+=p})
         $card.id = `filled-counts-${dataset.label}`;
         $card.setAttribute('chart-type','card');
         $card.setAttribute('chart-title',dataset.label);
-        $card.setAttribute('chart-value', dataset.data[0].toString().formatNumber());
+        $card.setAttribute('chart-value', value.toString().formatNumber());
         $card.setAttribute('chart-colour', chartColour );
         $card.setAttribute('card-style', "" );
         $card.setAttribute('style',`margin-bottom: 1em;`);
-        $card.setAttribute('caption',`${moment().format('YYYY').toString() == dataset.label?`Year-to-Date`:`Year-End`}`); 
+        $card.setAttribute('caption',`${showYTD?`Year-to-Date`:`Year-End`}`); 
         
         /*
         $card.setAttribute('href', '#filled-counts');
@@ -372,12 +383,24 @@ $(function () {
 
 
   
-  document.getElementById('month').setAttribute('data-label',`${moment().format('YYYY')}  Pothole Repair`);
+  document.getElementById('month').setAttribute('data-label','Year-to-Date Pothole Repairs');//`${moment().format('YYYY')}  Pothole Repair`);
   Promise.all([
-    PHDATA.getData('YEAR').then(res=>{
-      
-      updateCards(res,'filled-counts-month');
+    PHDATA.getData('MONTH,YEAR',true).then(res=>{
+      updateCards(res,'filled-counts-month',true);
+    }),
+    PHDATA.getData('MONTH,YEAR').then(res=>{ 
+      let total = 0;
+      let monthNumber;
 
+      res.chartData.datasets.forEach(dataset=>{
+        dataset.data.forEach(d=>{ total += d; });
+        monthNumber = dataset.data.findIndex(function(ele){ return typeof(ele)!='number'  })
+      });
+     
+      document.getElementById('js-chart-title-month').innerHTML = `Potholes filled for the period January &mdash; ${moment().format('MMMM D')}`
+      $widgetMonth.data=res 
+    }),
+    PHDATA.getData('MONTH,YEAR',false).then(res=>{
       /* Only show last full years */
       let shortListResults = res;
       let datasetRange = res.chartData.datasets.filter(dataset=>{
@@ -386,6 +409,7 @@ $(function () {
       shortListResults.chartData.datasets = datasetRange;
       updateCards(shortListResults,'filled-counts-year');
     }),
+
     PHDATA.getData('MONTH,YEAR').then(res=>{ 
       
        /* Only show last full years */
@@ -394,7 +418,7 @@ $(function () {
       })
       res.chartData.datasets = datasetRange;
 
-      document.getElementById('js-chart-title-year').innerHTML = `Potholes Filled for the Period January 1 &mdash; December 31`
+      document.getElementById('js-chart-title-year').innerHTML = `Potholes filled for the period of January 1 &mdash; December 31`
       document.querySelectorAll('.reset-view__button').forEach($btn=>{
         $btn.addEventListener('click',evt=>{
           evt.target.parentElement.hidden = true;
@@ -406,19 +430,7 @@ $(function () {
       $widgetYear.data=res 
     }),
 
-    PHDATA.getData('MONTH,YEAR').then(res=>{ 
-      let total = 0;
-      let monthNumber;
-      
-
-      res.chartData.datasets.forEach(dataset=>{
-        dataset.data.forEach(d=>{ total += d; });
-        monthNumber = dataset.data.findIndex(function(ele){ return typeof(ele)!='number'  })
-      });
-     
-      document.getElementById('js-chart-title-month').innerHTML = `Potholes Filled for the Period January &mdash; Today`
-      $widgetMonth.data=res 
-    }),
+   
   ]).then(function(arrayOfValuesOrErrors) {
     console.log('All Data Loaded');
   }).catch(err=>{

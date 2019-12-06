@@ -55,7 +55,7 @@ See examples below in the boilerplate code
         </div>
 
       <cotui-tabs id="js-view" selected="month" label="Charts Showing Potholes Filled">
-        <div data-label="2019 Pothole Repair" id="month" class="col-xs-12">
+        <div data-label="Year-to-Date Pothole Repairs" id="month" class="col-xs-12">
           <div>
             <div class="row">
               <div class="col-xs-12"><h2 id="js-chart-title-month">Potholes filled for the period of January 1 - July 21</h2></div>
@@ -63,7 +63,7 @@ See examples below in the boilerplate code
                   <span id="filled-counts-month" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(100px,1fr)); grid-column-gap: 1em;margin-bottom:1em;"></span>
                 </div>
             </div>
-            <cotui-chart id="pothole-bar-month" chart-type="bar" chart-stacked="false" chart-title-hide chart-title="Year To Date Potholes Filled" x-axisLabel="Fill Date" y-axisLabel="Total Fills"></cotui-chart>
+            <cotui-chart id="pothole-bar-month" chart-type="bar" chart-stacked="false" chart-title-hide chart-title="Monthly Potholes Filled" x-axisLabel="Month" y-axisLabel="Total Fills"></cotui-chart>
           </div>
         </div>
         
@@ -78,7 +78,7 @@ See examples below in the boilerplate code
                 <div class="reset-view" hidden><button type="button" class="btn btn-cancel btn-block reset-view__button">Reset Chart</button></div>
               </div>
             </div>
-            <cotui-chart id="pothole-bar-year" chart-type="bar" chart-stacked="false" chart-title-hide chart-title="Year To Date Potholes Filled" x-axisLabel="Fill Date" y-axisLabel="Total Fills"></cotui-chart>
+            <cotui-chart id="pothole-bar-year" chart-type="bar" chart-stacked="false" chart-title-hide chart-title="Monthly Potholes Filled" x-axisLabel="Month" y-axisLabel="Total Fills"></cotui-chart>
           </div>
         </div>
       </cotui-tabs>
