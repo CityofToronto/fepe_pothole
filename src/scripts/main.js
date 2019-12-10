@@ -397,7 +397,7 @@ $(function () {
         monthNumber = dataset.data.findIndex(function(ele){ return typeof(ele)!='number'  })
       });
      
-      document.getElementById('js-chart-title-month').innerHTML = `Potholes filled for the period January &mdash; ${moment().format('MMMM D')}`
+      document.getElementById('js-chart-title-month').innerHTML = `Potholes filled for the period of January &mdash; ${moment().format('MMMM D')}`
       $widgetMonth.data=res 
     }),
     PHDATA.getData('MONTH,YEAR',false).then(res=>{
