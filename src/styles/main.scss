@@ -21,6 +21,27 @@
   }
 
 
+  .filled-counts{
+    display: flex;
+    flex-wrap: wrap;
+    flex-direction: row;
+    justify-content: space-evenly;
+    margin-bottom: 0.5em;
+    //width: 100%;
+    
+    cotui-chart{
+      padding: 0;
+      &:first-child{
+        margin-left: 0;
+      }
+      flex: 1 auto;
+      //flex-grow: 1;
+      //flex-basis: 0;
+      margin-left: var(--margin-small);
+      //min-width: 20%;
+    }
+  }
+
   /* The switch - the box around the slider */
   .switch {
     position: relative;

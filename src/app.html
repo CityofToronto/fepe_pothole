@@ -16,6 +16,7 @@ See examples below in the boilerplate code
     <!-- endinject -->
     <!-- place any application print-only stylesheet references here -->
   <!-- endbuild -->
+
 <!-- cot-app:head end-->
 
 <!-- cot-app:body -->
@@ -60,7 +61,7 @@ See examples below in the boilerplate code
             <div class="row">
               <div class="col-xs-12"><h2 id="js-chart-title-month">Potholes filled for the period of January 1 - July 21</h2></div>
               <div class="col-xs-12">
-                  <span id="filled-counts-month" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(100px,1fr)); grid-column-gap: 1em;margin-bottom:1em;"></span>
+                  <span class="filled-counts" id="filled-counts-month"></span>
                 </div>
             </div>
             <cotui-chart id="pothole-bar-month" chart-type="bar" chart-stacked="false" chart-title-hide chart-title="Monthly Potholes Filled" x-axisLabel="Month" y-axisLabel="Total Fills"></cotui-chart>
@@ -72,7 +73,7 @@ See examples below in the boilerplate code
             <div class="row">
               <div class="col-xs-12"><h2 id="js-chart-title-year">Potholes filled for the period of January 1 - July 21</h2></div>
               <div class="col-xs-12">
-                <span id="filled-counts-year" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(100px,1fr)); grid-column-gap: 1em;margin-bottom:1em;"></span>
+                <span class="filled-counts" id="filled-counts-year"></span>
               </div>
               <div class="col-xs-12">
                 <div class="reset-view" hidden><button type="button" class="btn btn-cancel btn-block reset-view__button">Reset Chart</button></div>
@@ -94,6 +95,8 @@ See examples below in the boilerplate code
     <!-- core:js -->
     <!-- endinject -->
     <!-- place your application script references here: -->
+    <script type="text/javascript" src="<!-- @echo SRC_PATH -->/scripts/utils.js"></script>
+    <script type="text/javascript" src="<!-- @echo SRC_PATH -->/scripts/PotholeData.js"></script>
     <script type="text/javascript" src="<!-- @echo SRC_PATH -->/scripts/main.js"></script>
   <!-- endbuild -->
   <!--@if ENV!='prod'-->

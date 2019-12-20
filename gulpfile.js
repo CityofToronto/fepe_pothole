@@ -17,10 +17,13 @@ core.embeddedApp.createTasks(gulp, {
       DATA_YTD: `https://config.cc.toronto.ca:49093/c3api_data/v2/DataAccess.svc/pothole_data/pothole_dev_ytd`
     },
     qa: {
-      DATA_ANNUAL: `https://was-intra-qa.toronto.ca/c3api_data/v2/DataAccess.svc/pothole_data/pothole_qa_annual`,
-      DATA_YTD: `https://was-intra-qa.toronto.ca/c3api_data/v2/DataAccess.svc/pothole_data/pothole_qa_ytd`
+      DATA_ANNUAL: `https://secure.toronto.ca/c3api_data/v2/DataAccess.svc/pothole_data/pothole_annual`||`https://was-inter-qa.toronto.ca/c3api_data/v2/DataAccess.svc/pothole_data/pothole_qa_annual`,
+      DATA_YTD: `https://secure.toronto.ca/c3api_data/v2/DataAccess.svc/pothole_data/pothole_ytd`||`https://was-inter-qa.toronto.ca/c3api_data/v2/DataAccess.svc/pothole_data/pothole_qa_ytd`
     },
-    prod: {}
+    prod: {
+      DATA_ANNUAL: `https://secure.toronto.ca/c3api_data/v2/DataAccess.svc/pothole_data/pothole_annual`,
+      DATA_YTD: `https://secure.toronto.ca/c3api_data/v2/DataAccess.svc/pothole_data/pothole_ytd`
+    }
   }
 });
 
