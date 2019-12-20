@@ -1,9 +1,9 @@
 {
   "name": "fepe_pothole",
-  "version": "4.0.0",
+  "version": "1.0.0",
   "qaRelease": 1,
-  "description": "Describe this app",
-  "author": "Your name here",
+  "description": "The Transportation team needs away to visualize how many pot holes have been filled  over the years",
+  "author": "dmatthe",
   "contributors": [],
   "devDependencies": {
     "babel-preset-env": "^1.6.0",
