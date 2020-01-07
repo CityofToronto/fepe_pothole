@@ -64,18 +64,19 @@ $(document).ready(function(){
     /* Update the Year-to-Date View*/
     document.getElementById('js-chart-title-month').innerHTML = `Potholes filled for the period of January &mdash; ${moment().format('MMMM D')}`
     updateCards(res,'filled-counts-month',true);
-
+ 
+    /* Update the Year-to-Date View */
+    $widgetMonth.data=res;
     return res;
   })
 
   PHDATA.getData('MONTH,YEAR').then(res=>{ 
-    /* Update the Year-to-Date View */
-    $widgetMonth.data=res;
+    
 
     /* Update Annual View */
     document.getElementById('js-chart-title-year').innerHTML = `Potholes filled for the period of January 1 &mdash; December 31`
     let filteredDataset = res.chartData.datasets.filter(dataset=>{
-      return parseInt(dataset.label) < moment().format('YYYY')
+      return parseInt(dataset.label) < parseInt(moment().format('YYYY'))
     })
 
     let updatedResults = JSON.parse(JSON.stringify(res))

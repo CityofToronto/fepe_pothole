@@ -57,7 +57,10 @@ class PotholeData{
           labels = this.months;
           var obj = {}
           var resTemp = res.filter(result=>{
-            return result.MONTH <= moment().format('MM');
+            if(showYTD)
+              return result.MONTH <= moment().format('MM');
+            
+            return true
           })
   
   
