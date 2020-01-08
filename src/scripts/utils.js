@@ -9,33 +9,3 @@ String.prototype.formatNumber = function(places=0) {
       return intNum.toFixed(places).toString().replace(regex, '$&,');
     }
   }
-  
-  
-  const getJSON = (url)=>{
-    return fetch(url).then(res=>{return res.json()})
-    /*
-    return new Promise(function(resolve,reject){
-        const request = new XMLHttpRequest();
-        request.open('GET', url, true);
-        if(request){
-          request.onload = function() {
-              if (request.status >= 200 && request.status < 400) {
-                  // Success!
-                  const data = JSON.parse(request.responseText);
-                  resolve(data);
-              } else {
-                  reject(new Error(`Error: ${JSON.parse(request.response)}`) )
-                  // We reached our target server, but it returned an error
-              }
-          };
-          request.onerror = function() {
-            // There was a connection error of some sort
-            };
-            request.send();
-        } else {
-          reject( new Error(`Error: No Request (${url})`) )
-        }
-       
-    })
-    */
-  }

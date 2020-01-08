@@ -62,7 +62,7 @@ $(document).ready(function(){
 
   PHDATA.getData('MONTH,YEAR',true).then(res=>{
     /* Update the Year-to-Date View*/
-    document.getElementById('js-chart-title-month').innerHTML = `Potholes filled for the period of January &mdash; ${moment().format('MMMM D')}`
+    document.getElementById('js-chart-title-month').innerHTML = `Potholes filled for the period of January 1 &mdash; ${moment().format('MMMM D')}`
     updateCards(res,'filled-counts-month',true);
  
     /* Update the Year-to-Date View */
@@ -82,7 +82,7 @@ $(document).ready(function(){
     let updatedResults = JSON.parse(JSON.stringify(res))
     updatedResults.chartData.datasets = filteredDataset;
     updateCards(updatedResults,'filled-counts-year');
-    $widgetYear.data=updatedResults 
+    $widgetYear.data=updatedResults;
 
     // document.getElementById('js-chart-title-year').innerHTML = `Potholes filled for the period of January 1 &mdash; December 31`
     // document.querySelectorAll('.reset-view__button').forEach($btn=>{
